@@ -1,35 +1,37 @@
-# My dotfiles
+# Dotfiles de Nacho inspirado en fraruiz/dotfiles
 
-## 🚀 Installation
+## 🚀 Instalación
 
-### ⚠️ Attention: Requirements
+### ⚠️ Atención (para mac):
 
-- If you have macOS, install [brew]("https://brew.sh/")
+- Instalar [brew]("https://brew.sh/")
 
-1. Execute installer
+
+1. Ejeutar Instalador
    ```bash
-   bash <(curl -s https://raw.githubusercontent.com/fraruiz/dotfiles/HEAD/installer)
+   bash <(curl -s https://raw.githubusercontent.com/logos914/dotfiles/HEAD/installer)
    ```
-2. Switch to zsh shell (Optional)
+2. Cambiar el shell a zsh
     ```bash
     chsh -s $(which zsh)
     ```
 
-## 🔰 Update
+## 🔰 Actualizar
 ```bash
 dot self update
 ```
 
-## 🦾 Tools
+## 🦾 Herramientas
 - [SDKMAN](https://sdkman.io/) for install programming languages
 - [Docker](https://www.docker.com/) installer
 - [ZIM Framework](https://zimfw.sh/)
 - [Aliases](https://raw.githubusercontent.com/fraruiz/dotfiles/master/shell/aliases.sh)
 
 
-## 🥳 Inspired on:
+## 🥳 Inspirado en:
 
 - [Dotly](https://github.com/CodelyTV/dotly)
+. [Dotfiles de Francisco Ruiz](https://github.com/fraruiz/dotfiles) 
 
-## ⚖️ License
+## ⚖️ Licencia
 The MIT License (MIT). Please see [License](LICENSE) for more information.
