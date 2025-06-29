@@ -9,3 +9,8 @@ function recent_dirs() {
 
   cd "$(echo "$selected" | sed "s/\~/$escaped_home/")" || echo "Invalid directory"
 }
+
+cursor() {
+  ~/apps/Cursor-0.48.9-x86_64.AppImage $@ &
+}
+
