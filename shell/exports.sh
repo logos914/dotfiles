@@ -65,4 +65,5 @@ export path=(
   "/usr/bin"
   "/usr/sbin"
   "/sbin"
+  "$HOME/apps"
 )
