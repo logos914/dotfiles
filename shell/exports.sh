@@ -53,6 +53,7 @@ fi
 
 export path=(
   "$HOME/bin"
+  "$HOME/.local/bin"
   "$DOTFILES_PATH/bin"
   "$HOME/.cargo/bin"
   "$JAVA_HOME/bin"

@@ -13,5 +13,33 @@ install_macos_custom() {
 }
 
 install_linux_custom() {
-  echo
+  output::answer "Installing and configuring system tools"
+  
+  # Ensure dependencies
+  sudo apt update && sudo apt install -y neovim tilix xdotool wmctrl python3 python3-pip nodejs npm cargo ripgrep fd-find wget unzip
+
+  # Install Nerd Fonts (FiraCode)
+  output::answer "Installing FiraCode Nerd Font"
+  mkdir -p "$HOME/.local/share/fonts"
+  wget -q https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip -O /tmp/FiraCode.zip
+  unzip -o -q /tmp/FiraCode.zip -d "$HOME/.local/share/fonts/"
+  fc-cache -fv || true
+
+  # Install LunarVim with PIP flag to bypass Debian PEP 668 restriction
+  PIP_BREAK_SYSTEM_PACKAGES=1 LV_BRANCH='release-1.4/neovim-0.9' bash <(curl -s https://raw.githubusercontent.com/LunarVim/LunarVim/release-1.4/neovim-0.9/utils/installer/install.sh) --no-install-dependencies
+  
+  # Configure Shell Shortcuts
+  gsettings set org.gnome.shell.keybindings toggle-message-tray "['<Super>c']"
+  gsettings set org.gnome.desktop.wm.keybindings toggle-maximized "['<Super>m']" # Set Super+M for toggle-maximized
+
+  # Configure Custom Shortcuts
+  local custom0="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+  
+  # Tilix
+  gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$custom0 name 'Tilix'
+  gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$custom0 command 'tilix'
+  gsettings set org.gnome.settings-daemon.plugins.media-keys.custom-keybinding:$custom0 binding '<Super>t'
+  
+  # Set custom bindings (only custom0 for Tilix now)
+  gsettings set org.gnome.settings-daemon.plugins.media-keys custom-keybindings "['$custom0']"
 }
