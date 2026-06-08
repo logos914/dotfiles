@@ -48,3 +48,4 @@ alias up='dot package update'
 alias ip='dot network ip'
 alias private-ip='dot network ip -p'
 alias projects='dot dev projects'
+alias lvim="$HOME/.local/bin/lvim"
