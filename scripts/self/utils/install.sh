@@ -1,4 +1,4 @@
-#!/bin/user/env bash
+#!/usr/bin/env bash
 
 install_macos_custom() {
   output::answer "Installing needed gnu packages"
