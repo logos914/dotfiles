@@ -47,6 +47,20 @@ install_linux_custom() {
     else
       output::answer "skipping GNOME keybindings (gsettings not found)"
     fi
+    # Auto-restore GNOME shortcuts if a backup exists in the repo.
+    # NOTE: do NOT pipe through log::file — log::file exits 0 unconditionally
+    # and would swallow a dconf failure under set -euo pipefail.
+    # Run restore directly so its real exit code is checked.
+    local repo_root="${DOTFILES_PATH:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../.." && pwd)}"
+    local backup_file="$repo_root/gnome/shortcuts.dconf"
+    if [[ -f "$backup_file" ]]; then
+      if ! "$repo_root/bin/dot" gnome restore; then
+        output::error "dot gnome restore failed (see above)"
+        exit 1
+      fi
+    else
+      output::answer "no backup found, skipping restore"
+    fi
   else
     output::answer "skipping GNOME keybindings (not running on GNOME)"
   fi
