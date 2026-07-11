@@ -25,7 +25,7 @@ dot self update
 - [SDKMAN](https://sdkman.io/) for install programming languages
 - [Docker](https://www.docker.com/) installer
 - [ZIM Framework](https://zimfw.sh/)
-- [Aliases](https://raw.githubusercontent.com/fraruiz/dotfiles/master/shell/aliases.sh)
+- [Aliases](https://raw.githubusercontent.com/logos914/dotfiles/master/shell/aliases.sh)
 
 
 ## 🥳 Inspirado en:

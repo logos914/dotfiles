@@ -38,3 +38,9 @@ export NVM_DIR="$HOME/.nvm"
 
 # opencode
 export PATH=/home/ignacio/.opencode/bin:$PATH
+
+# Go
+export PATH="$PATH:/usr/local/go/bin:$HOME/go/bin"
+
+# Linuxbrew
+eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv bash)"

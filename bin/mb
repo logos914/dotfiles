@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+#
+# mb — microbin CLI uploader
+# Uploads text, files, or stdin to a Microbin instance and prints the public URL.
+#
+# Environment:
+#   MICROBIN_URL  Base URL of the Microbin instance (default: https://copiame.potus.ar)
+#
+# Usage:
+#   mb "hello world"
+#   mb path/to/file.txt          # prompts: upload as file or upload file contents as text
+#   mb < path/to/file.txt
+#   echo "hello world" | mb
+#   command | mb
+#   command 2>&1 | mb
+
+set -u
+
+: "${MICROBIN_URL:=https://copiame.potus.ar}"
+BASE_URL="${MICROBIN_URL%/}"
+
+# Rewrite /upload/<id> -> /p/<id> so the printed URL is the human-readable paste.
+rewrite_url() {
+  sed -E 's#/upload/#/p/#'
+}
+
+upload_file() {
+  curl -fsS -X POST "$BASE_URL/upload" -F "file=@$1" \
+    -o /dev/null -w '%{redirect_url}\n' | rewrite_url
+}
+
+upload_text() {
+  curl -fsS -X POST "$BASE_URL/upload" -F "content=$1" \
+    -o /dev/null -w '%{redirect_url}\n' | rewrite_url
+}
+
+usage() {
+  cat >&2 <<'EOF'
+Error: No input provided.
+Usage:
+  mb <text_string>
+  mb <file_path>
+  mb < file_path
+  echo "hello world" | mb
+  command | mb
+  command 2>&1 | mb
+EOF
+}
+
+if [[ -n "${1-}" ]]; then
+  arg="$1"
+  if [[ -f "$arg" ]]; then
+    echo "File detected. Choose an option:"
+    echo "1. Upload file (default)"
+    echo "2. Upload text from file"
+    printf "Enter choice (1 or 2): "
+    read -r choice
+    choice="${choice:-1}"
+    case "$choice" in
+      1) upload_file "$arg" ;;
+      2) upload_text "@$arg" ;;
+      *) echo "Invalid choice" >&2; exit 1 ;;
+    esac
+  elif [[ -d "$arg" ]]; then
+    echo "Error: '$arg' is a directory. This script can only handle files and text." >&2
+    exit 1
+  else
+    upload_text "$arg"
+  fi
+elif [[ ! -t 0 ]]; then
+  upload_text "@/dev/stdin"
+else
+  usage
+  exit 1
+fi
