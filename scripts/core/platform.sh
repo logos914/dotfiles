@@ -25,22 +25,26 @@ platform::wsl_home_path() {
 platform::is_gnome() {
   local xdg="${XDG_CURRENT_DESKTOP:-}"
   local session="${DESKTOP_SESSION:-}"
-  local normalized
 
-  normalized="$(printf '%s:%s' "$xdg" "$session" | tr '[:upper:]' '[:lower:]')"
+  local lower_xdg="$(printf '%s' "$xdg" | tr '[:upper:]' '[:lower:]')"
+  local lower_session="$(printf '%s' "$session" | tr '[:upper:]' '[:lower:]')"
+  local normalized="${lower_xdg}:${lower_session}"
+
+  local reject_pattern="(^|[:;])?(pop|kde|sway|xfce|i3|lxde|mate|cinnamon)($|[:;])?"
+  local gnome_pattern="(^|[:;])gnome([:-]|$)"
 
   # Explicit non-GNOME rejections first (including Pop!_OS COSMIC "pop")
-  if [[ "$normalized" =~ (^|[:;])?(pop|kde|sway|xfce|i3|lxde|mate|cinnamon)($|[:;])? ]]; then
+  if [[ "$normalized" =~ $reject_pattern ]]; then
     return 1
   fi
 
   # Primary detection: XDG_CURRENT_DESKTOP contains gnome (GNOME, ubuntu:GNOME, GNOME-Classic)
-  if [[ "${xdg,,}" =~ (^|[:;])gnome([:-]|$) ]]; then
+  if [[ "$lower_xdg" =~ $gnome_pattern ]]; then
     return 0
   fi
 
   # Fallback: DESKTOP_SESSION contains gnome
-  if [[ "${session,,}" == *gnome* ]]; then
+  if [[ "$lower_session" == *gnome* ]]; then
     return 0
   fi
 
