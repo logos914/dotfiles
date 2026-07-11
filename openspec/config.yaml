@@ -1,0 +1,112 @@
+schema: spec-driven
+
+# ---------------------------------------------------------------------------
+# Context
+# ---------------------------------------------------------------------------
+context: |
+  Project: dotfiles (clone of logos914/dotfiles)
+  Type: Personal dotfiles repository (shell/git/editor configs and installer)
+  Stack: Bash 5.x, Zsh + Zim Framework, Vim + SpaceVim, VS Code, Git
+  Installer: bash `installer` script → symlinks dotfiles into $HOME
+  CLI: `bin/dot <context> <script>` dispatcher + fzf picker
+  Quality: `dot self lint` (shfmt) and `dot self analysis` (shellcheck)
+  CI: .github/workflows/ci.yml runs the installer on macOS-11.0 and ubuntu-20.04
+  Persistence mode: hybrid (OpenSpec files + Engram memory)
+
+# ---------------------------------------------------------------------------
+# Conventions
+# ---------------------------------------------------------------------------
+conventions:
+  editorconfig: |
+    Tab indent, indent_size 2 (for the small handful of in-repo .sh files)
+  shell_style: |
+    `set -euo pipefail` (when supported by the script).
+    Use `#!/usr/bin/env bash` shebang.
+    Source helpers via `$DOTFILES_PATH/scripts/core/_main.sh`.
+    Use the `dot` CLI dispatcher — do not invent new entry points.
+  commit_style: |
+    Conventional commits only. No AI/Co-Authored-By trailers.
+  scoping: |
+    Changes affect at most one domain: `shell`, `git`, `editors/<name>`,
+    `scripts/<context>`, or `installer`. Cross-domain changes are rare and
+    MUST be split into one change per domain.
+
+# ---------------------------------------------------------------------------
+# Testing
+# ---------------------------------------------------------------------------
+testing:
+  strict_tdd: false
+  reason: |
+    This is a dotfiles repository — collection of shell, vim, and editor
+    config files. There is no build system, no test runner, no package
+    manifest (no package.json, go.mod, pyproject.toml, Cargo.toml).
+    `scripts/self/lint` (shfmt) and `scripts/self/analysis` (shellcheck) are
+    static-analysis quality gates, not tests.
+  runner:
+    command: ""
+    framework: none
+  layers:
+    unit:        { available: false, tool: "—" }
+    integration: { available: false, tool: "—" }
+    e2e:         { available: false, tool: "—" }
+  coverage:
+    available: false
+    command: ""
+  quality:
+    linter:
+      available: true
+      command: "dot self lint            # uses shfmt -i 2"
+    type_checker:
+      available: false
+      command: ""
+    formatter:
+      available: true
+      command: "shfmt -i 2 -w (via dot self lint)"
+    static_analysis:
+      available: true
+      command: "dot self analysis         # uses shellcheck -s bash -S warning"
+  ci:
+    file: .github/workflows/ci.yml
+    runs_on: [macos-11.0, ubuntu-20.04]
+    what_it_does: |
+      Runs the installer on each push/PR. Does not run tests.
+
+# ---------------------------------------------------------------------------
+# Phase rules
+# ---------------------------------------------------------------------------
+rules:
+  proposal:
+    - "For shell-script changes, mention `shfmt` and `shellcheck` compliance in Why."
+    - "For symlink changes, list the destination paths and any backup behavior."
+    - "For installer/symlink changes, include a rollback note (installer stashes git/.gitconfig)."
+
+  specs:
+    - "Use Given/When/Then for scenarios, even though TDD is off — keeps intent crisp."
+    - "Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)."
+    - "Reference file paths as repo-relative (e.g., shell/zsh/.zimrc) not absolute."
+
+  design:
+    - "Group by domain (shell / git / editors / scripts / installer)."
+    - "Document symlink ordering and idempotency expectations."
+    - "When adding to scripts/<context>, follow the existing dispatcher pattern."
+
+  tasks:
+    - "Group by domain."
+    - "One task = small enough to review in one sitting."
+    - "Always include a final task: `dot self lint` and `dot self analysis`."
+
+  apply:
+    tdd: false
+    test_command: ""
+    quality_command: "dot self lint && dot self analysis"
+
+  verify:
+    test_command: ""
+    build_command: ""
+    coverage_threshold: 0
+    quality_command: "dot self lint && dot self analysis"
+    smoke_command: "./bin/dot --help    # dispatcher sanity check"
+
+  archive:
+    - "Archive is the audit trail — never delete or rewrite."
+    - "Symlink/install changes MUST keep the rollback note in the archived proposal."
