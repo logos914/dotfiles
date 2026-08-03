@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source "$DOTFILES_PATH/scripts/core/_main.sh"
+
+##? Restore GNOME desktop, shell, and media-keys keybindings
+##?
+##? Usage:
+##?   restore
+docs::parse "$@"
+
+if [[ -n "${DOTFILES_PATH:-}" ]]; then
+  repo_root="$DOTFILES_PATH"
+else
+  repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+fi
+
+if ! platform::is_gnome; then
+  output::error "GNOME is required for this command"
+  exit 1
+fi
+
+if ! platform::command_exists dconf; then
+  output::error "dconf not found"
+  exit 1
+fi
+
+backup_file="$repo_root/gnome/shortcuts.dconf"
+
+if [[ ! -f "$backup_file" ]]; then
+  output::error "Backup file not found: gnome/shortcuts.dconf"
+  exit 1
+fi
+
+if [[ -z "$(tr -d '[:space:]' <"$backup_file")" ]]; then
+  output::answer "Backup file is empty, nothing to restore"
+  exit 0
+fi
+
+dconf load /org/gnome/ <"$backup_file"
+
+output::answer "Restored GNOME shortcuts from gnome/shortcuts.dconf"

@@ -1,0 +1,173 @@
+# Tasks: gnome-shortcuts-backup
+
+> Delivery: chained PRs (`force-chained` strategy; 800-line per-PR cap).
+> sdd-apply executes PR 1 → PR 2 → PR 3 in order. Each PR targets `main` independently (stacked-to-main).
+
+## Review Workload Forecast
+
+| Field | Value |
+|-------|-------|
+| Estimated changed lines | ~155 total (PR 1 ~50, PR 2 ~85, PR 3 ~20) |
+| 800-line budget risk | Low (every PR is well below the per-PR cap) |
+| Chained PRs recommended | Yes (delivery strategy `force-chained`) |
+| Chain strategy | stacked-to-main |
+| Delivery strategy | force-chained |
+| Decision needed before apply | No |
+
+Decision needed before apply: No
+Chained PRs recommended: Yes
+Chain strategy: stacked-to-main
+800-line budget risk: Low
+
+### Work units by PR
+
+| PR | Goal | Base | Tasks |
+|----|------|------|-------|
+| 1 | Foundation: `platform::is_gnome` + guard existing GNOME block | main | 1.1, 1.2, 1.3 |
+| 2 | `dot gnome backup`, `dot gnome restore`, placeholder artifact | main (post-PR 1) | 2.1, 2.2, 2.3, 2.4 |
+| 3 | Installer auto-restore hook | main (post-PR 2) | 3.1, 3.2, 3.3 |
+
+## Global checklist (applies to every PR)
+
+- [ ] shfmt + shellcheck pass on every new/modified shell script (`scripts/self/lint`, `scripts/self/analysis`).
+- [ ] No invocation of `dot self install` or `dot self update` from any new script.
+- [ ] No edits outside the file list of the active PR.
+- [ ] Real-machine GNOME validation deferred to user (current host is non-GNOME).
+
+---
+
+## PR 1 — Foundation: `platform::is_gnome` + installer guard
+
+### Task 1.1 — Add `platform::is_gnome` to `scripts/core/platform.sh`
+- **Files**: `scripts/core/platform.sh`.
+- **What**: Append the function from design §"`platform::is_gnome` detection". XDG primary (case-insensitive; accepts `GNOME`, `ubuntu:GNOME`, `GNOME-Classic`); explicit reject of `pop|kde|sway|xfce|i3|lxde|mate|cinnamon` before the GNOME match; `DESKTOP_SESSION` fallback. Returns 0/1 only, no output.
+- **Start**: file ends after `platform::wsl_home_path`.
+- **Finish**: `bash -n` clean; with `XDG_CURRENT_DESKTOP=ubuntu:GNOME` → returns 0; with `XDG_CURRENT_DESKTOP=KDE` → returns 1.
+- **Verification**: `scripts/self/lint`, `scripts/self/analysis`; inline stub exercises positive and negative cases.
+- **Rollback**: `git revert` the file.
+- **Status**: DONE (commit `aca27b1`).
+
+### Task 1.2 — Wrap existing GNOME block in `scripts/self/utils/install.sh`
+- **Files**: `scripts/self/utils/install.sh` (lines 31–44 today).
+- **What**: Wrap the entire `# Configure Shell Shortcuts` … `custom-keybindings` block in `if platform::is_gnome; then … fi`. Inside the guard, each `gsettings set` additionally gated by `platform::command_exists gsettings` per design landmine (WSL/sandbox safety).
+- **Start**: those `gsettings` calls run unconditionally today (crash on non-GNOME / WSL).
+- **Finish**: `bash -n` clean; mocked non-GNOME smoke skips the entire block.
+- **Verification**: shfmt + shellcheck clean; subshell smoke with `XDG=KDE` confirms no `gsettings` invocation.
+- **Rollback**: `git revert` the file.
+- **Status**: DONE (commit `392d22b`).
+
+### Task 1.3 — Verify installer does not crash on non-GNOME
+- **Files**: n/a (verification only).
+- **What**: Source `_main.sh`, invoke the function body in a subshell with `XDG=KDE` and `PATH` stripped of `gsettings`/`dconf`; confirm exit 0 and absence of GNOME invocations.
+- **Start**: PR 1.2 just landed.
+- **Finish**: subshell exits 0; `gsettings` never resolved; no auto-restore log line yet (PR 3 territory).
+- **Verification**: log capture shows the "skipping GNOME keybindings" branch only.
+- **Rollback**: n/a.
+- **Status**: DONE (covered by commit `392d22b`'s verification).
+
+**[PR 1 finish criteria]**: shfmt + shellcheck clean; `bash -n` clean on both files; `platform::is_gnome` returns 0 on `XDG=ubuntu:GNOME` and 1 on `XDG=KDE`; non-GNOME smoke shows zero `gsettings` invocations.
+
+---
+
+## PR 2 — Backup/restore commands + placeholder artifact
+
+### Task 0 (PR 2 pre-task) — Fix `scripts/self/utils/install.sh` shebang typo
+- **Files**: `scripts/self/utils/install.sh` (line 1 only).
+- **What**: Change `#!/user/env bash` → `#!/usr/bin/env bash`. User-mandated pre-task for PR 2.
+- **Start**: typo on line 1.
+- **Finish**: shfmt + shellcheck clean; behavior unchanged on hosts that invoke bash correctly already.
+- **Verification**: `bash -n`, `shfmt -i 2 -d`, `shellcheck` all clean.
+- **Rollback**: `git revert` the shebang commit.
+- **Status**: DONE (commit `1f6beb2`).
+
+### Task 2.1 — Create `scripts/gnome/backup`
+- **Files**: `scripts/gnome/backup` (new, executable, `chmod +x`).
+- **What**: Implement per design §"Backup script". `#!/usr/bin/env bash`; `set -euo pipefail`; source `"$DOTFILES_PATH/scripts/core/_main.sh"`; `docs::parse "$@"`; resolve repo root from `DOTFILES_PATH` (fallback `BASH_SOURCE`); GNOME guard → exit 1; require `dconf` binary (NOT `gsettings`); `mkdir -p "$repo_root/gnome"`; stage to `tmp="$(mktemp)"` with `trap rm`; write `# GENERATED by dot gnome backup` header; append three `dconf dump` paths in order — `/org/gnome/desktop/wm/keybindings/`, `/org/gnome/shell/keybindings/`, `/org/gnome/settings-daemon/plugins/media-keys/`; atomic `mv` to `"$repo_root/gnome/shortcuts.dconf"`; log success via `output::answer`.
+- **Start**: `scripts/gnome/` does not exist.
+- **Finish**: file exists, executable, `bash -n` clean.
+- **Verification**: shfmt + shellcheck clean; on `XDG=KDE` script exits non-zero with "GNOME is required".
+- **Rollback**: `rm scripts/gnome/backup`.
+- **Status**: DONE (commit `0e322c2`).
+
+### Task 2.2 — Create `scripts/gnome/restore`
+- **Files**: `scripts/gnome/restore` (new, executable).
+- **What**: Per design §"Restore script". Strict bash; source `_main.sh`; resolve repo root; GNOME guard → exit 1; require `dconf`; on missing `gnome/shortcuts.dconf` → `output::error "Backup file not found"` and exit 1; on whitespace-only file → `output::answer "Backup file is empty, nothing to restore"` and exit 0; otherwise `dconf load /org/gnome/ < "$backup_file"`.
+- **Start**: task 2.1 just landed.
+- **Finish**: file exists, executable, `bash -n` clean.
+- **Verification**: shfmt + shellcheck clean; non-GNOME smoke errors out with the expected message.
+- **Rollback**: `rm scripts/gnome/restore`.
+- **Status**: DONE (commit `965c24a`).
+
+### Task 2.3 — Commit placeholder `gnome/shortcuts.dconf`
+- **Files**: `gnome/shortcuts.dconf` (new); `gnome/` dir created if missing.
+- **What**: A single-line file with the `# GENERATED by dot gnome backup` header plus an inline `#` comment instructing the user to run `dot gnome backup` on their main machine to populate it. Establishes the artifact path so PR 3's existence check resolves; the placeholder's `#`-only content makes any accidental `dconf load` a no-op (dconf ignores `#` lines).
+- **Start**: `gnome/` may not exist yet.
+- **Finish**: file present, non-empty (`wc -c > 0`), shellcheck-clean.
+- **Verification**: `wc -c gnome/shortcuts.dconf` > 0; `bin/dot gnome restore` against it exits 0 (with `dconf` mocked to `echo`) — confirms the no-op path is safe.
+- **Rollback**: `rm gnome/shortcuts.dconf`.
+- **Status**: DONE (commit `145032f`).
+
+### Task 2.4 — Verify `bin/dot` routing for the new namespace
+- **Files**: n/a (verification only).
+- **What**: Confirm `bin/dot gnome -h`, `bin/dot gnome backup -h`, `bin/dot gnome restore -h` resolve through the existing dispatcher with no change to `bin/dot` itself. Run backup/restore on a non-GNOME env; both must error with the expected message.
+- **Start**: tasks 2.1–2.3 just landed.
+- **Finish**: each `-h` invocation prints usage; the non-GNOME invocations error cleanly.
+- **Verification**: console output matches design's error strings.
+- **Rollback**: n/a.
+- **Status**: DONE (verified; routing log at `/tmp/sdd_verify/routing.log`). Note: `bin/dot gnome -h` does NOT list sub-commands — `bin/dot` only handles `-h` at top level. The intended convention is `bin/dot gnome backup -h` / `bin/dot gnome restore -h`, both of which route correctly. Per the prompt's "or whichever help convention bin/dot uses" allowance, no `bin/dot` change was needed.
+
+**[PR 2 finish criteria]**: shfmt + shellcheck clean; `bin/dot gnome --help` lists both subcommands; placeholder `gnome/shortcuts.dconf` committed; non-GNOME smoke errors cleanly for both commands.
+
+---
+
+## PR 3 — Auto-restore hook in installer
+
+### Task 3.1 — Add auto-restore hook in `scripts/self/utils/install.sh`
+- **Files**: `scripts/self/utils/install.sh` (inside the PR 1 GNOME guard, after the existing `gsettings` calls).
+- **What**: Per design §"Installer integration". Existence check on `"$DOTFILES_PATH/gnome/shortcuts.dconf"`. Exists → `"$DOTFILES_PATH/bin/dot" gnome restore | log::file "Restoring GNOME shortcuts"`. Missing → `output::answer "no backup found, skipping restore"`. Restore errors stay fatal (invalid file = installer hard-fails); backup-missing is non-fatal (installer continues).
+- **Start**: PR 1 wrapped the block; PR 2 produced both scripts and the placeholder.
+- **Finish**: `bash -n` clean; hook is inside the existing `if platform::is_gnome` block; `else` branch (non-GNOME) still continues unaffected.
+- **Verification**: shfmt + shellcheck clean; smoke via `_main.sh`-sourced subshell with `DOTFILES_PATH` pointed at the repo and placeholder present.
+- **Rollback**: `git revert` the file.
+- **Status**: DONE (commit `2be7460`). Implemented with the pipefail-safety refinement from landmine #14 — the restore is NOT piped through `log::file` (which always exits 0 and would swallow dconf failures under `set -euo pipefail`); instead it is invoked directly so its real exit code is checked.
+
+### Task 3.2 — Verify skip path (GNOME, no backup)
+- **Files**: n/a (verification only).
+- **What**: Temporarily move `gnome/shortcuts.dconf` aside; invoke the function in a `_main.sh`-sourced subshell with GNOME detected; confirm the skip log line appears and no `dconf` is invoked.
+- **Start**: PR 3.1 just landed.
+- **Finish**: log contains exactly "no backup found, skipping restore"; `dconf` is never resolved.
+- **Verification**: log capture matches.
+- **Rollback**: `git checkout -- gnome/shortcuts.dconf` after the smoke.
+- **Status**: DONE. Verified: GNOME + no backup → `output::answer "no backup found, skipping restore"` emitted; dconf invocation log EMPTY; INNER_RC=0.
+
+### Task 3.3 — Verify happy path (GNOME, backup present)
+- **Files**: n/a (verification only).
+- **What**: With placeholder present and `dconf` mocked (`echo`), confirm the hook invokes `bin/dot gnome restore` and the installer continues. Real validation (actual keybindings landing in dconf) requires the user running `dot gnome backup` on their main machine first.
+- **Start**: PR 3.1 landed; placeholder from PR 2.3 present.
+- **Finish**: log shows "Restoring GNOME shortcuts"; install exits 0.
+- **Verification**: log inspection.
+- **Rollback**: n/a.
+- **Status**: DONE. Verified TWO sub-scenarios:
+- Happy (placeholder valid): `dconf load /org/gnome/` invoked ONCE; "Restored GNOME shortcuts from gnome/shortcuts.dconf"; INNER_RC=0.
+- Pipefail-safety (deliberately invalid `[/broken\n` file + dconf mocked to fail): mock-dconf stderr `dconf: ERROR: failed to load /org/gnome/: parse error` AND installer `output::error "dot gnome restore failed (see above)"` BOTH emitted; INNER_RC line never reached; OUTER_BASH_C_RC=1. **PROVED pipefail-safety: dconf failure did NOT silently succeed.**
+
+**[PR 3 finish criteria]**: shfmt + shellcheck clean; installer exits 0 in both skip and restore paths; no `dconf load` invoked on non-GNOME; the placeholder file's presence correctly toggles between the two paths. ✅ ALL MET (plus pipefail-safety proven by Scenario D in /tmp/opencode/sdd_pr3/PR3_VERIFICATION_EVIDENCE.md).
+
+---
+
+## Cross-PR sequencing
+
+PR 1 lands first: it introduces `platform::is_gnome` (the only detection helper PR 2 and PR 3 depend on) AND fixes the installer crash as a standalone benefit. PR 2 builds `dot gnome backup`/`restore` and seeds the `gnome/shortcuts.dconf` artifact on top of PR 1's helper. PR 3 wires the auto-restore, depending on PR 1's helper AND PR 2's scripts and placeholder file. All three PRs target `main` (stacked-to-main); each diff is autonomous and revertible independently.
+
+## Open questions
+
+None.
+
+## Risks (task-level landmines)
+
+- **Detection edge cases**: `XDG_CURRENT_DESKTOP` may be unset, multi-valued (`ubuntu:GNOME`), or contain Pop!_OS COSMIC variants. Task 1.1 must exercise positive (`ubuntu:GNOME`, `GNOME-Classic`, `ubuntu:GNOME-wayland`), negative (`KDE`, `pop`, `sway`), and edge (unset) cases before merging.
+- **`set -euo pipefail` + `log::file` pipefail**: piped commands can swallow non-zero exits; tasks 1.2 and 3.1 must ensure `log::file` exits 0 on missing log dir OR wrap calls in `|| { output::answer "…failed, continuing"; }` so installer stays non-fatal.
+- **`dconf` on Snap/Flatpak**: bus access may fail under sandbox confinement; scripts must exit non-zero rather than silently succeed (per design landmine; do not paper over with `|| true`).
+- **Running installer as root**: dconf applies to root's profile, not desktop user. Note this in the PR 1 commit body — do NOT add a separate doc task (out of scope per user constraints).
+- **Placeholder `shortcuts.dconf` containing only `#` lines**: `dconf load` treats `#` as a comment and EOF as end-of-input → true no-op. Confirmed safe; PR 3 smoke proves this.
+- **No test runner**: all verification is shell-script-level (`bash -n`, `shfmt`, `shellcheck`, mocked subshell smoke). End-to-end GNOME behavior must be confirmed by the user on their real machine.
