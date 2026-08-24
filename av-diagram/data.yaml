@@ -1,0 +1,471 @@
+# Datos en crudo para el diagrama de conexiones audiovisuales
+# (se va completando a medida que el usuario aporta información)
+
+entities:
+  - id: pc_mixer
+    label: "PC Mixer"
+    description: "Computadora principal de mezcla"
+    ports:
+      - id: pc_mixer_eth
+        label: "Ethernet"
+        tipo: "red (bidireccional)"
+        senal: red
+    cards:
+      - id: decklink_duo2
+        label: "Blackmagic DeckLink Duo 2"
+        ports:
+          - id: sdi_1
+            label: "SDI 1"
+            tipo: entrada
+            senal: video
+          - id: sdi_2
+            label: "SDI 2"
+            tipo: entrada
+            senal: video
+          - id: sdi_3
+            label: "SDI 3"
+            tipo: entrada
+            senal: video
+          - id: sdi_4
+            label: "SDI 4"
+            tipo: entrada
+            senal: video
+      - id: decklink_studio2
+        label: "Blackmagic DeckLink Studio 2"
+        ports:
+          - id: studio2_sdi_in
+            label: "SDI In"
+            tipo: entrada
+            senal: video
+          - id: studio2_sdi_out
+            label: "SDI Out"
+            tipo: salida
+            senal: video
+          - id: studio2_hdmi_in
+            label: "HDMI In"
+            tipo: entrada
+            senal: video
+          - id: studio2_hdmi_out
+            label: "HDMI Out"
+            tipo: salida
+            senal: video
+          - id: studio2_audio_in
+            label: "Audio In"
+            tipo: entrada
+            senal: audio
+            # falta: cantidad de canales / tipo de conector
+          - id: studio2_audio_out
+            label: "Audio Out"
+            tipo: salida
+            senal: audio
+            # falta: cantidad de canales / tipo de conector
+
+  - id: cam1
+    label: "CAM 1"
+    description: "Cámara de video - sobrenombre: Master"
+    ports:
+      - id: cam1_audio_in
+        label: "Audio In"
+        tipo: entrada
+        senal: audio
+        nota: "recibe el audio de la consola de sala; se embebe en el SDI Out"
+      - id: cam1_out
+        label: "SDI Out"
+        tipo: salida
+        senal: "video + audio embebido"
+      - id: cam1_intercom_in
+        label: "Intercom"
+        tipo: entrada
+        senal: intercom
+
+  - id: cam2
+    label: "CAM 2"
+    description: "Cámara de video - sobrenombre: Corto"
+    ports:
+      - id: cam2_out
+        label: "SDI Out"
+        tipo: salida
+        senal: video
+      - id: cam2_intercom_in
+        label: "Intercom"
+        tipo: entrada
+        senal: intercom
+
+  - id: cam3
+    label: "CAM 3"
+    description: "Cámara de video - sobrenombre: Invertido - audio: micrófono propio de la cámara"
+    ports:
+      - id: cam3_out
+        label: "SDI Out"
+        tipo: salida
+        senal: "video + audio embebido"
+        nota: "audio tomado con micrófono propio de la cámara"
+      - id: cam3_intercom_in
+        label: "Intercom"
+        tipo: entrada
+        senal: intercom
+
+  - id: cam4
+    label: "CAM 4"
+    description: "Cámara de video - sobrenombre: General - audio: micrófono propio de la cámara"
+    ports:
+      - id: cam4_out
+        label: "SDI Out"
+        tipo: salida
+        senal: "video + audio embebido"
+        nota: "audio tomado con micrófono propio de la cámara"
+
+  - id: pc_kaspar
+    label: "PC Kaspar"
+    description: "Computadora de playout (CasparCG)"
+    ports:
+      - id: kaspar_eth
+        label: "Ethernet"
+        tipo: "red (bidireccional)"
+        senal: red
+    cards:
+      - id: decklink2
+        label: "DeckLink 2"
+        ports:
+          - id: kaspar_sdi_in
+            label: "SDI In"
+            tipo: entrada
+            senal: video
+          - id: kaspar_sdi_out
+            label: "SDI Out"
+            tipo: salida
+            senal: video
+          - id: kaspar_hdmi_in
+            label: "HDMI In"
+            tipo: entrada
+            senal: video
+          - id: kaspar_hdmi_out
+            label: "HDMI Out"
+            tipo: salida
+            senal: video
+
+  - id: atem_mini
+    label: "ATEM Mini"
+    description: "Blackmagic ATEM Mini - switcher"
+    ports:
+      - id: atem_hdmi_in_1
+        label: "HDMI In 1"
+        tipo: entrada
+        senal: video
+      - id: atem_hdmi_in_2
+        label: "HDMI In 2"
+        tipo: entrada
+        senal: video
+      - id: atem_hdmi_in_3
+        label: "HDMI In 3"
+        tipo: entrada
+        senal: video
+      - id: atem_hdmi_in_4
+        label: "HDMI In 4"
+        tipo: entrada
+        senal: video
+      - id: atem_hdmi_out
+        label: "HDMI Out"
+        tipo: salida
+        senal: video
+
+  - id: aja_ki_pro
+    label: "AJA Ki Pro"
+    description: "AJA Ki Pro"
+    ports:
+      - id: sdi_in
+        label: "SDI In"
+        tipo: entrada
+        senal: video
+      - id: sdi_out
+        label: "SDI Out"
+        tipo: salida
+        senal: video
+      - id: hdmi_in
+        label: "HDMI In"
+        tipo: entrada
+        senal: video
+      - id: hdmi_out
+        label: "HDMI Out"
+        tipo: salida
+        senal: video
+
+  - id: led_scaler
+    label: "Escalador LED"
+    description: "Escalador de pantalla LED"
+    ports:
+      - id: sdi_in
+        label: "SDI In"
+        tipo: entrada
+        senal: video
+
+  - id: mini_converter_sdi_audio
+    label: "Mini Converter SDI to Audio"
+    description: "Conversor Blackmagic Mini - SDI hacia Audio"
+    ports:
+      - id: sdi_in
+        label: "SDI In"
+        tipo: entrada
+        senal: video
+      - id: sdi_out
+        label: "SDI Out"
+        tipo: salida
+        senal: video
+      - id: audio_out
+        label: "Audio Out (analógico)"
+        tipo: salida
+        senal: audio
+
+  - id: notebook
+    label: "Notebook"
+    description: "Notebook - envía gráfica vía NDI"
+    ports:
+      - id: notebook_eth
+        label: "Ethernet"
+        tipo: salida
+        senal: "red / video NDI (gráfica)"
+        nota: "envía flujo de video NDI con la gráfica a utilizar, a través de la red"
+      - id: notebook_usb_out
+        label: "USB"
+        tipo: salida
+        senal: "datos / tally"
+        nota: "conecta al prototipo de puente para tally"
+
+  - id: tally_bridge_prototype
+    label: "Prototipo puente tally"
+    description: "Prototipo de puente para tally"
+    ports:
+      - id: usb_in
+        label: "USB"
+        tipo: entrada
+        senal: "datos / tally"
+      - id: serial_out
+        label: "Puerto serie"
+        tipo: salida
+        senal: "datos / tally"
+
+  - id: intercom_datavideo
+    label: "Intercom Datavideo"
+    description: "Sistema de intercomunicación Datavideo"
+    ports:
+      - id: serial_in
+        label: "Puerto serie"
+        tipo: entrada
+        senal: "datos / tally"
+      - id: comm_out_1
+        label: "Intercom Out - CAM1/CAM2"
+        tipo: salida
+        senal: intercom
+        nota: "misma salida/cable llega a CAM1 y CAM2, que están físicamente juntas"
+      - id: comm_out_2
+        label: "Intercom Out - CAM3"
+        tipo: salida
+        senal: intercom
+
+  - id: router_tplink
+    label: "Router TP-Link"
+    description: >
+      Router TP-Link. Genera WiFi con SSID "Logos Streaming".
+      IP del router: 172.16.9.253. Mascara de subred: 255.255.248.0 (/21),
+      por lo que 172.16.9.253 y el rango DHCP 172.16.8.1-172.16.8.200 estan
+      en la misma subred (172.16.8.0/21).
+      Rango DHCP que asigna: 172.16.8.1 a 172.16.8.200.
+    ports:
+      - id: router_puerto_1
+        label: "Puerto 1 (WAN/Internet)"
+        tipo: "red (bidireccional)"
+        senal: "red / Internet"
+        nota: "por aca entra Internet y sale la señal hacia el streaming"
+      - id: router_eth
+        label: "Ethernet (LAN)"
+        tipo: "red (bidireccional)"
+        senal: red
+        nota: "PENDIENTE confirmar si esta conectado por cable al switch de red"
+
+  - id: switch_red
+    label: "Switch de red"
+    description: "Switch de red Ethernet"
+    ports:
+      - id: eth_pc_mixer
+        label: "Ethernet - PC Mixer"
+        tipo: "red (bidireccional)"
+        senal: red
+      - id: eth_pc_kaspar
+        label: "Ethernet - PC Kaspar"
+        tipo: "red (bidireccional)"
+        senal: red
+      - id: eth_notebook
+        label: "Ethernet - Notebook"
+        tipo: "red (bidireccional)"
+        senal: "red / video NDI (gráfica)"
+      - id: eth_router
+        label: "Ethernet - Router TP-Link"
+        tipo: "red (bidireccional)"
+        senal: red
+
+  - id: audio_consola_sala
+    label: "Consola de audio (sala)"
+    description: "Consola de audio de la sala"
+    ports:
+      - id: audio_in
+        label: "Audio In"
+        tipo: entrada
+        senal: audio
+        nota: "recibe retorno de audio del Mini Converter (SDI to Audio)"
+      - id: audio_out
+        label: "Audio Out"
+        tipo: salida
+        senal: audio
+        nota: "envía el audio de sala a CAM 1"
+
+connections:
+  - origen: audio_consola_sala.audio_out
+    destino: cam1.cam1_audio_in
+    tipo_cable: "N/D - definido por el sonidista, fuera del alcance de este diagrama"
+    senal: audio
+  - origen: cam1_out
+    destino: pc_mixer.decklink_duo2.sdi_1
+    tipo_cable: "HD-SDI (coaxial SDI)"
+    senal: "video + audio embebido"
+  - origen: cam2_out
+    destino: pc_mixer.decklink_studio2.studio2_sdi_in
+    tipo_cable: "HD-SDI (coaxial SDI)"
+    senal: video
+  - origen: cam3_out
+    destino: pc_mixer.decklink_duo2.sdi_2
+    tipo_cable: "HD-SDI (coaxial SDI)"
+    senal: "video + audio embebido"
+  - origen: cam4_out
+    destino: pc_mixer.decklink_duo2.sdi_3
+    tipo_cable: "HD-SDI (coaxial SDI)"
+    senal: "video + audio embebido"
+  - origen: pc_kaspar.decklink2.kaspar_sdi_out
+    destino: pc_mixer.decklink_duo2.sdi_4
+    tipo_cable: "SDI coaxial"
+    senal: video
+  - origen: pc_mixer.decklink_studio2.studio2_hdmi_out
+    destino: atem_mini.atem_hdmi_in_1
+    tipo_cable: "HDMI"
+    senal: video
+  - origen: pc_kaspar.decklink2.kaspar_hdmi_out
+    destino: atem_mini.atem_hdmi_in_2
+    tipo_cable: "HDMI"
+    senal: video
+  - origen: atem_mini.atem_hdmi_out
+    destino: aja_ki_pro.hdmi_in
+    tipo_cable: "PENDIENTE"
+    senal: video
+  - origen: aja_ki_pro.sdi_out
+    destino: mini_converter_sdi_audio.sdi_in
+    tipo_cable: "SDI coaxial"
+    senal: video
+  - origen: mini_converter_sdi_audio.sdi_out
+    destino: led_scaler.sdi_in
+    tipo_cable: "SDI coaxial"
+    senal: video
+  - origen: mini_converter_sdi_audio.audio_out
+    destino: audio_consola_sala.audio_in
+    tipo_cable: "N/D - definido por el sonidista, fuera del alcance de este diagrama"
+    senal: audio
+  - origen: pc_mixer.pc_mixer_eth
+    destino: switch_red.eth_pc_mixer
+    tipo_cable: Ethernet
+    senal: red
+  - origen: pc_kaspar.kaspar_eth
+    destino: switch_red.eth_pc_kaspar
+    tipo_cable: Ethernet
+    senal: red
+  - origen: notebook.notebook_eth
+    destino: switch_red.eth_notebook
+    tipo_cable: Ethernet
+    senal: "red / video NDI (gráfica)"
+  - origen: notebook.notebook_usb_out
+    destino: tally_bridge_prototype.usb_in
+    tipo_cable: USB
+    senal: "datos / tally"
+  - origen: tally_bridge_prototype.serial_out
+    destino: intercom_datavideo.serial_in
+    tipo_cable: "puerto serie"
+    senal: "datos / tally"
+  - origen: intercom_datavideo.comm_out_1
+    destino: cam1.cam1_intercom_in
+    tipo_cable: "cable de intercomunicación (sin más detalle, según indicación del usuario)"
+    senal: intercom
+    nota: "mismo cable/salida también llega a CAM2, por estar físicamente juntas"
+  - origen: intercom_datavideo.comm_out_1
+    destino: cam2.cam2_intercom_in
+    tipo_cable: "cable de intercomunicación (sin más detalle, según indicación del usuario)"
+    senal: intercom
+    nota: "mismo cable/salida también llega a CAM1, por estar físicamente juntas"
+  - origen: intercom_datavideo.comm_out_2
+    destino: cam3.cam3_intercom_in
+    tipo_cable: "cable de intercomunicación (sin más detalle, según indicación del usuario)"
+    senal: intercom
+  - origen: router_tplink.router_eth
+    destino: switch_red.eth_router
+    tipo_cable: Ethernet
+    senal: red
+
+flujos_logicos:
+  # Flujos de señal que viajan sobre la red (no son un cable punto a punto,
+  # sino un flujo logico que atraviesa el switch)
+  - id: ndi_grafica
+    origen: notebook
+    destino: pc_mixer
+    tipo: "NDI (video sobre red)"
+    descripcion: "La Notebook envía por NDI el flujo de video con la gráfica a utilizar, exclusivamente hacia la PC Mixer, a través del switch de red"
+    ruta_fisica: ["notebook -> switch_red (Ethernet)", "switch_red -> pc_mixer (Ethernet)"]
+
+layout_escritorio:
+  # Esto es un requisito distinto al diagrama de conexiones: una imagen/mockup
+  # de la disposicion fisica del escritorio de operacion, no un diagrama logico.
+  # Formato pedido: una IMAGEN (el usuario acepta SVG), incrustada en la parte
+  # inferior del diagrama principal, a modo de referencia visual.
+  descripcion: "Escritorio de operación donde se concentran ciertos equipos"
+  equipos_apilados_al_costado:
+    # aclarado: "black magic mini mini" = ATEM Mini (no el Mini Converter SDI to Audio)
+    - pc_mixer
+    - pc_kaspar
+    - aja_ki_pro
+    - atem_mini
+  sobre_el_escritorio:
+    - item: notebook
+      descripcion: "todo en uno, apoyada sobre el escritorio (no apilada)"
+    - item: "Monitor + teclado + mouse"
+      cantidad_monitores: 1
+      para: pc_kaspar
+    - item: "Monitores + teclado + mouse"
+      cantidad_monitores: 2
+      para: pc_mixer
+    - item: "Monitor"
+      cantidad_monitores: 1
+      para: atem_mini
+      nota: "solo monitor, sin teclado/mouse (es un switcher, no una PC)"
+  orden_izquierda_a_derecha_sobre_escritorio:
+    - "2x Monitor PC Mixer (+ teclado + mouse)"
+    - "Monitor ATEM Mini"
+    - "Monitor PC Kaspar (+ teclado + mouse)"
+    - "Notebook"
+
+estilo:
+  # Requisito del usuario: SDI y HDMI deben distinguirse visualmente entre si
+  # pero quedar agrupados como parte de la misma categoria "video"
+  - grupo: video
+    subtipos: [SDI, HDMI]
+    nota: "diferenciar visualmente SDI vs HDMI (ej. color/trazo distinto) pero mostrar ambos como parte del grupo 'video' (ej. mismo color base o leyenda comun)"
+  - grupo: audio
+    subtipos: []
+    nota: "grupo separado del video; cables de audio (analogico, etc.) con su propio color"
+
+notes:
+  - "Decision del usuario: no se especifica tipo/conector de cable de audio en este diagrama (queda a criterio del sonidista)"
+  - "Falta tipo de cable: ATEM Mini (HDMI Out) -> AJA Ki Pro HDMI In"
+  - "Falta cantidad de canales / tipo de conector de audio in/out en DeckLink Studio 2 (puede no ser necesario si tampoco se especifica cable de audio)"
+  - "ATEM Mini: HDMI In 3, HDMI In 4 aun sin conexion asignada"
+  - "PC Kaspar: SDI In y HDMI In (DeckLink 2) aun sin conexion asignada"
+  - "AJA Ki Pro: SDI In y HDMI Out aun sin conexion asignada"
+  - "CAM 2 (Corto): confirmado, NO lleva audio embebido (camara en movimiento constante, ruido de mic)"
+  - "Confirmado: flujo NDI de la Notebook va exclusivamente hacia la PC Mixer (ver flujos_logicos.ndi_grafica)"
+  - "Switch de red: puertos usados = PC Mixer, PC Kaspar, Notebook. Sin mas conexiones indicadas (¿el switch tiene mas equipos o sale a internet?)"
+  - "Router TP-Link: falta saber si el puerto LAN esta conectado por cable Ethernet al switch de red (o es standalone). Confirmado: puerto 1 = WAN/Internet, de ahi sale el streaming"
+  - "Subred del router confirmada correcta: mascara 255.255.248.0 (/21), 172.16.9.253 y 172.16.8.1-200 estan en la misma subred 172.16.8.0/21"
