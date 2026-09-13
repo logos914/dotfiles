@@ -16,7 +16,13 @@ cd "$DOTFILES_PATH"
 git stash push git/.gitconfig 2>&1
 git reset --hard >/dev/null 2>&1
 git checkout master >/dev/null 2>&1
-git pull origin master>/dev/null 2>&1
+# Canonical remote is gitlab (set by installer); fall back to origin (=github
+# mirror) if gitlab isn't configured on this checkout.
+if git remote get-url gitlab >/dev/null 2>&1; then
+  git pull gitlab master >/dev/null 2>&1
+else
+  git pull origin master >/dev/null 2>&1
+fi
 git stash pop >/dev/null 2>&1
 sudo chmod -R 755 $DOTFILES_PATH 2>&1
 
