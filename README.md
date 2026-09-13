@@ -36,9 +36,10 @@ Los secretos viven centralizados en una instancia de
 `DOTF_INFISICAL_URL` en GitLab, ver abajo). El repo guarda 3 vars en GitLab
 que permiten loguearse al CLI con un service token de solo lectura:
 
-- `DOTF_INFISICAL_PROJECT` — id del proyecto en Infisical
+- `DOTF_INFISICAL_PROJECT_ID` — UUID del proyecto (no el slug).
+  Sacarlo de Infisical → Project Settings → "Project ID".
 - `DOTF_INFISICAL_URL` — URL de la instancia
-- `DOTF_INFISICAL_TOKEN_DEPLOY` — service token readonly
+- `DOTF_INFISICAL_SERVICE_TOKEN` — service token readonly (un solo string)
 
 El installer trae una copia local a `$DOTFILES_PATH/secrets/envs.env`
 (gitignored, mode 600) que el shell hace source al iniciar — cero latencia
