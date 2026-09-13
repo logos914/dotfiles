@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source "$DOTFILES_PATH/scripts/core/_main.sh"
+source "$DOTFILES_PATH/scripts/core/config_sync.sh"
+
+##? Backup the Claude Code configuration into the dotfiles
+##?
+##? Usage:
+##?   backup
+docs::parse "$@"
+
+# Only configuration: sessions, projects, credentials, caches and telemetry
+# stay in $HOME and are never copied into the repository.
+claude_items=(
+  CLAUDE.md
+  settings.json
+  keybindings.json
+  agents
+  commands
+  skills
+  output-styles
+)
+
+claude_path="${CLAUDE_CONFIG_DIR:-$HOME/.claude}"
+
+if [ ! -d "$claude_path" ]; then
+  output::error "Claude Code configuration not found in \`$claude_path\`"
+  exit 1
+fi
+
+config_sync::backup "$claude_path" "$DOTFILES_PATH/claude" "${claude_items[@]}"
+
+if [ "$config_sync_backed_up_items" -eq 0 ]; then
+  output::answer "Everything is already in sync with the dotfiles"
+  exit 0
+fi
+
+output::answer "Run \`dot symlinks apply\` to link the backed up configuration"

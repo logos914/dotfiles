@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+source "$DOTFILES_PATH/scripts/core/_main.sh"
+source "$DOTFILES_PATH/scripts/core/config_sync.sh"
+
+##? Backup the opencode configuration into the dotfiles
+##?
+##? Usage:
+##?   backup
+docs::parse "$@"
+
+# Only configuration: `auth.json`, the local database and `node_modules`
+# stay in $HOME and are never copied into the repository.
+opencode_items=(
+  opencode.json
+  opencode.jsonc
+  AGENTS.md
+  agent
+  command
+  plugin
+  themes
+)
+
+opencode_path="${XDG_CONFIG_HOME:-$HOME/.config}/opencode"
+
+if [ ! -d "$opencode_path" ]; then
+  output::error "opencode configuration not found in \`$opencode_path\`"
+  exit 1
+fi
+
+config_sync::backup "$opencode_path" "$DOTFILES_PATH/opencode" "${opencode_items[@]}"
+
+if [ "$config_sync_backed_up_items" -eq 0 ]; then
+  output::answer "Everything is already in sync with the dotfiles"
+  exit 0
+fi
+
+output::answer "Run \`dot symlinks apply\` to link the backed up configuration"

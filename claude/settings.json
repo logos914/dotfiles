@@ -1,0 +1,21 @@
+{
+  "model": "opus",
+  "enabledPlugins": {
+    "firebase@firebase": true
+  },
+  "extraKnownMarketplaces": {
+    "firebase": {
+      "source": {
+        "source": "github",
+        "repo": "firebase/firebase-tools"
+      }
+    }
+  },
+  "modelSettings": {
+    "claude-opus-5": {
+      "effortLevel": "xhigh"
+    }
+  },
+  "theme": "dark",
+  "agentPushNotifEnabled": true
+}

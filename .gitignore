@@ -5,3 +5,21 @@ shell/zsh/**/**.zwc
 shell/zsh/**/**.zwc.old
 
 git/.gitconfig
+
+# Never version AI assistant state/secrets, only their config
+claude/.credentials.json
+claude/history.jsonl
+claude/projects/
+claude/sessions/
+claude/session-env/
+claude/shell-snapshots/
+claude/telemetry/
+claude/cache/
+claude/backups/
+claude/file-history/
+claude/plugins/marketplaces/
+opencode/auth.json
+opencode/node_modules/
+opencode/package.json
+opencode/package-lock.json
+opencode/bun.lock

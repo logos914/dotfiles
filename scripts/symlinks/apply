@@ -13,46 +13,75 @@ docs::parse "$@"
 
 current_timestamp() { date +%s; }
 
-ensure_if_exists_file(){
-  if [ -f $1 ]; then
-      mv $1 $1.$(current_timestamp).back
+# Links $1 (inside the repository) into $2 ($HOME), backing up whatever was
+# already there. It is idempotent: an already correct symlink is left alone.
+symlinks::link() {
+  local -r origin="$1"
+  local -r destination="$2"
+
+  if [ -L "$destination" ] && [ "$(readlink "$destination")" = "$origin" ]; then
+    return 0
   fi
+
+  if [ -e "$destination" ] || [ -L "$destination" ]; then
+    local backup_path
+    backup_path="$destination.$(current_timestamp).back"
+
+    output::answer "Backing up \`$destination\` in \`$backup_path\`"
+    mv "$destination" "$backup_path"
+  fi
+
+  mkdir -p "$(dirname "$destination")"
+  ln -s "$origin" "$destination"
 }
 
-ensure_if_exists_file ~/.inputrc
-ln -s $DOTFILES_PATH/shell/.inputrc ~/.inputrc
+# Links every item of the repository directory $1 into the directory $2,
+# instead of linking $2 itself, so the tool keeps its own state (sessions,
+# caches, credentials) outside of the dotfiles.
+symlinks::link_directory_content() {
+  local -r origin_directory="$1"
+  local -r destination_directory="$2"
+
+  [ -d "$origin_directory" ] || return 0
+
+  mkdir -p "$destination_directory"
+
+  local item
+  for item in "$origin_directory"/* "$origin_directory"/.[!.]*; do
+    [ -e "$item" ] || continue
+
+    symlinks::link "$item" "$destination_directory/$(basename "$item")"
+  done
+}
+
+config_path="${XDG_CONFIG_HOME:-$HOME/.config}"
+
+symlinks::link "$DOTFILES_PATH/shell/.inputrc" "$HOME/.inputrc"
 
 # Bash
 
-ensure_if_exists_file ~/.bashrc
-ln -s $DOTFILES_PATH/shell/bash/.bashrc ~/.bashrc
-
-ensure_if_exists_file ~/.bash_profile
-ln -s $DOTFILES_PATH/shell/bash/.bash_profile ~/.bash_profile
+symlinks::link "$DOTFILES_PATH/shell/bash/.bashrc" "$HOME/.bashrc"
+symlinks::link "$DOTFILES_PATH/shell/bash/.bash_profile" "$HOME/.bash_profile"
 
 # Zsh
 
-ensure_if_exists_file ~/.zlogin
-ln -s $DOTFILES_PATH/shell/zsh/.zlogin ~/.zlogin
-
-ensure_if_exists_file ~/.zshenv
-ln -s $DOTFILES_PATH/shell/zsh/.zshenv ~/.zshenv
-
-ensure_if_exists_file ~/.zshrc
-ln -s $DOTFILES_PATH/shell/zsh/.zshrc ~/.zshrc
-
-ensure_if_exists_file ~/.zimrc
-ln -s $DOTFILES_PATH/shell/zsh/.zimrc ~/.zimrc
+symlinks::link "$DOTFILES_PATH/shell/zsh/.zlogin" "$HOME/.zlogin"
+symlinks::link "$DOTFILES_PATH/shell/zsh/.zshenv" "$HOME/.zshenv"
+symlinks::link "$DOTFILES_PATH/shell/zsh/.zshrc" "$HOME/.zshrc"
+symlinks::link "$DOTFILES_PATH/shell/zsh/.zimrc" "$HOME/.zimrc"
 
 # Git
 
-ensure_if_exists_file ~/.gitattributes
-ln -s $DOTFILES_PATH/git/.gitattributes ~/.gitattributes
+symlinks::link "$DOTFILES_PATH/git/.gitattributes" "$HOME/.gitattributes"
+symlinks::link "$DOTFILES_PATH/git/.gitconfig" "$HOME/.gitconfig"
+symlinks::link "$DOTFILES_PATH/git/.gitignore_global" "$HOME/.gitignore_global"
 
-ensure_if_exists_file ~/.gitconfig
-ln -s $DOTFILES_PATH/git/.gitconfig ~/.gitconfig
+# Claude Code
 
-ensure_if_exists_file ~/.gitignore_global
-ln -s $DOTFILES_PATH/git/.gitignore_global ~/.gitignore_global
+symlinks::link_directory_content "$DOTFILES_PATH/claude" "$HOME/.claude"
+
+# opencode
+
+symlinks::link_directory_content "$DOTFILES_PATH/opencode" "$config_path/opencode"
 
 log::success "Done!"
