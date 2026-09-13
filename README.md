@@ -31,13 +31,18 @@ dot self update
 
 ## 🔐 Secrets (Infisical)
 
-Los secretos viven centralizados en [Infisical](https://infisical.com/)
-(instancia propia en `dotf-internal-host`). El repo guarda 3 vars
-en GitLab (`DOTF_INFISICAL_PROJECT`, `DOTF_INFISICAL_URL`,
-`DOTF_INFISICAL_TOKEN_DEPLOY`) que permiten loguearse al CLI con un service
-token de solo lectura. El installer trae una copia local a
-`$DOTFILES_PATH/secrets/envs.env` (gitignored, mode 600) que el shell hace
-source al iniciar — cero latencia por terminal.
+Los secretos viven centralizados en una instancia de
+[Infisical](https://infisical.com/) (la URL se guarda como
+`DOTF_INFISICAL_URL` en GitLab, ver abajo). El repo guarda 3 vars en GitLab
+que permiten loguearse al CLI con un service token de solo lectura:
+
+- `DOTF_INFISICAL_PROJECT` — id del proyecto en Infisical
+- `DOTF_INFISICAL_URL` — URL de la instancia
+- `DOTF_INFISICAL_TOKEN_DEPLOY` — service token readonly
+
+El installer trae una copia local a `$DOTFILES_PATH/secrets/envs.env`
+(gitignored, mode 600) que el shell hace source al iniciar — cero latencia
+por terminal.
 
 ### Bootstrap (una vez por máquina)
 
