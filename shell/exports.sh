@@ -68,3 +68,13 @@ export path=(
   "/sbin"
   "$HOME/apps"
 )
+
+# ------------------------------------------------------------------------------
+# Secrets (Infisical) — local dump populated by `dot secrets bootstrap`.
+# Refresh on demand with `dot secrets refresh`.
+# ------------------------------------------------------------------------------
+if [[ -f "$DOTFILES_PATH/secrets/envs.env" ]]; then
+  set -a
+  . "$DOTFILES_PATH/secrets/envs.env"
+  set +a
+fi

@@ -2,38 +2,47 @@
 
 set -euo pipefail
 
-##? Setups the environment
+##? One-shot dotfiles installer
 ##?
 ##? Usage:
-##?    installer
-
-sudo -v
-
-DOTFILES_REPOSITORY=${DOTFILES_REPOSITORY:-logos914/dotfiles}
-DOTFILES_BRANCH=${DOTFILES_BRANCH:-main}
-DOTFILES_LOG_FILE=${DOTFILES_LOG_FILE:-$HOME/dotfiles.log}
-DOTFILES_PATH="$HOME/.dotfiles"
-
-export DOTFILES_PATH="$HOME/.dotfiles"
-export DOTFILES_ENV=${DOTFILES_ENV:-PROD}
-export DOTFILES_INSTALLER=true
+##?    installer <gitlab-project-access-token>
+##?
+##? Generates the token at:
+##?    https://gitlab.com/log.os/dotfiles/-/settings/access_tokens
+##? (scope: read_api — used once to fetch 3 secret vars, never persisted)
 
 red='\033[0;31m'
 green='\033[0;32m'
-purple='\033[0;35m'
 normal='\033[0m'
 
-_w() {
-  local -r text="${1:-}"
-  echo -e "$text"
-}
-_a() { _w " > $1"; }
-_e() { _a "${red}$1${normal}"; }
-_s() { _a "${green}$1${normal}"; }
-_q() { read -rp "🤔 $1: " "$2"; }
+if [ -z "${1:-}" ]; then
+  echo -e "${red}❌ Usage: $0 <gitlab-project-access-token>${normal}" 1>&2
+  echo "   Get one at https://gitlab.com/log.os/dotfiles/-/settings/access_tokens (scope: read_api)" 1>&2
+  exit 1
+fi
+
+export DOTF_GITLAB_TOKEN="$1"
+
+DOTFILES_PATH=${DOTFILES_PATH:-$HOME/.dotfiles}
+DOTFILES_LOG_FILE=${DOTFILES_LOG_FILE:-$HOME/dotfiles.log}
+
+export DOTFILES_PATH
+export DOTFILES_ENV=${DOTFILES_ENV:-PROD}
+export DOTFILES_INSTALLER=true
+
+DOTFILES_GITLAB_HOST=${DOTFILES_GITLAB_HOST:-gitlab.com}
+DOTFILES_GITLAB_NAMESPACE=${DOTFILES_GITLAB_NAMESPACE:-log.os}
+DOTFILES_GITLAB_REPO=${DOTFILES_GITLAB_REPO:-dotfiles}
+DOTFILES_GITLAB_BRANCH=${DOTFILES_GITLAB_BRANCH:-master}
+
+_w() { echo -e "${1:-}"; }
+_a() { _w " > ${1:-}"; }
+_e() { _a "${red}${1:-}${normal}"; }
+_s() { _a "${green}${1:-}${normal}"; }
 
 _log() {
-  log_name="$1"
+  local log_name="$1"
+  local current_date
   current_date=$(date "+%Y-%m-%d %H:%M:%S")
 
   touch "$DOTFILES_LOG_FILE"
@@ -46,11 +55,9 @@ _log() {
   echo "" >>"$DOTFILES_LOG_FILE"
 }
 
-current_timestamp() { date +%s; }
-
 create_dotfiles_dir() {
   if [ -d "$1" ]; then
-    local -r backup_path="$1.$(current_timestamp).back"
+    local -r backup_path="$1.$(date +%s).back"
 
     _e "The path '$1' already exist"
     _s "Creating a backup in '$backup_path'"
@@ -61,15 +68,15 @@ create_dotfiles_dir() {
   mkdir -p "$1"
 }
 
-command_exists() {
-  type "$1" >/dev/null 2>&1
-}
+command_exists() { type "$1" >/dev/null 2>&1; }
 
 _w "  ┌───────────────────────────────────────┐"
 _w "~ │ 🚀 Welcome to the ${green}dotfiles${normal} installer! │ ~"
 _w "  └───────────────────────────────────────┘"
 _w
-_w "Your dotfiles will be located in ~/.dotfiles"
+_w "Your dotfiles will be located in $DOTFILES_PATH"
+
+sudo -v
 
 create_dotfiles_dir "$DOTFILES_PATH"
 
@@ -95,12 +102,11 @@ if ! command_exists git; then
     case "$OSTYPE" in
     darwin*)
       _a "Checking if Command Line Tools are installed 🕵️‍♂️"
-
-      xcode-select --install 2>&1 | grep installed >/dev/null
-      if [[ $? ]]; then
+      xcode-select --install 2>&1 | grep installed >/dev/null || true
+      if ! xcode-select -p >/dev/null 2>&1; then
         _a "Installing Command Line Tools 📺"
         xcode-select --install
-        _q "Press a key after command line tools has finished to continue...👇" "CLT_INSTALLED"
+        read -rp "Press a key after command line tools has finished to continue...👇" _
       fi
       ;;
     *)
@@ -135,14 +141,23 @@ if ! command_exists curl; then
   fi
 fi
 
-_a "Cloning dotfiles"
-git clone "https://github.com/$DOTFILES_REPOSITORY.git" "$DOTFILES_PATH" 2>&1 | _log "Clone dotfiles"
+_a "Cloning dotfiles from https://$DOTFILES_GITLAB_HOST/$DOTFILES_GITLAB_NAMESPACE/$DOTFILES_GITLAB_REPO ($DOTFILES_GITLAB_BRANCH)"
+git clone "https://$DOTFILES_GITLAB_HOST/$DOTFILES_GITLAB_NAMESPACE/$DOTFILES_GITLAB_REPO.git" "$DOTFILES_PATH" 2>&1 | _log "Clone dotfiles"
 
-sudo chmod -R 755 $DOTFILES_PATH
+(cd "$DOTFILES_PATH" && git checkout "$DOTFILES_GITLAB_BRANCH") 2>&1 | _log "Checkout branch" || true
 
-cd $DOTFILES_PATH
+sudo chmod -R 755 "$DOTFILES_PATH"
 
+cd "$DOTFILES_PATH"
+
+# `dot self install` runs `script::depends_on ... infisical` (so the CLI gets
+# installed if missing) and then runs `dot secrets bootstrap` itself. The
+# bootstrap will see $DOTF_GITLAB_TOKEN (exported above) and use it to log into
+# Infisical and dump envs to $DOTFILES_PATH/secrets/envs.env.
 "$PWD/bin/dot" self install
 
+unset DOTF_GITLAB_TOKEN
+
 _a "🎉 dotfiles installed correctly! 🎉"
+_a "Infisical secrets live at $DOTFILES_PATH/secrets/envs.env"
 _a "Please, restart your terminal to see the changes"

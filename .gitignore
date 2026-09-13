@@ -23,3 +23,8 @@ opencode/node_modules/
 opencode/package.json
 opencode/package-lock.json
 opencode/bun.lock
+
+# Local secrets dump populated by `dot secrets bootstrap` (gitignore the whole
+# dir so the env file can never be committed by accident). Anchored to the
+# repo root so `scripts/secrets/` (the bootstrap scripts) stays tracked.
+/secrets/

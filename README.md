@@ -6,12 +6,20 @@
 
 - Instalar [brew]("https://brew.sh/")
 
+1. Generar un **Project Access Token** en
+   [gitlab.com/log.os/dotfiles/-/settings/access_tokens](https://gitlab.com/log.os/dotfiles/-/settings/access_tokens)
+   con scope `read_api`. Copiar el valor (no se vuelve a mostrar).
 
-1. Ejeutar Instalador
+2. Ejeutar el instalador pasándole el token como argumento (no se persiste en
+   ningún lado, se usa una sola vez para bajar las 3 vars de Infisical):
    ```bash
-   bash <(curl -s https://raw.githubusercontent.com/logos914/dotfiles/HEAD/installer)
+   bash <(curl -fsSL https://gitlab.com/log.os/dotfiles/-/raw/master/installer) <token>
    ```
-2. Cambiar el shell a zsh
+   El instalador clona el repo desde GitLab, corre `dot self install` (que
+   instala el CLI de Infisical si falta) y termina haciendo login en Infisical
+   para dejar las env vars disponibles en cada shell nuevo.
+
+3. Cambiar el shell a zsh
     ```bash
     chsh -s $(which zsh)
     ```
@@ -20,6 +28,43 @@
 ```bash
 dot self update
 ```
+
+## 🔐 Secrets (Infisical)
+
+Los secretos viven centralizados en [Infisical](https://infisical.com/)
+(instancia propia en `dotf-internal-host`). El repo guarda 3 vars
+en GitLab (`DOTF_INFISICAL_PROJECT`, `DOTF_INFISICAL_URL`,
+`DOTF_INFISICAL_TOKEN_DEPLOY`) que permiten loguearse al CLI con un service
+token de solo lectura. El installer trae una copia local a
+`$DOTFILES_PATH/secrets/envs.env` (gitignored, mode 600) que el shell hace
+source al iniciar — cero latencia por terminal.
+
+### Bootstrap (una vez por máquina)
+
+Si instalaste con el one-liner, ya quedó hecho. Si querés forzar un
+re-bootstrap (token rotado, etc.), exportá el token y corré:
+
+```bash
+export DOTF_GITLAB_TOKEN=glpat-xxxxxxxxxxxxxxxxxxxx
+dot secrets bootstrap
+```
+
+Si preferís prompt interactivo, omití la env var y el script te la pide
+(oculta lo tipeado). El CLI de Infisical se instala solo si falta (`brew` en
+mac, script oficial en linux).
+
+El bootstrap es **idempotente**: si `$DOTFILES_PATH/secrets/envs.env` ya existe,
+lo deja como está y avisa que corras `dot secrets refresh` si querés
+actualizar.
+
+### Uso diario
+
+- `dot secrets refresh` — re-trae las envs de Infisical al dump local
+  (después de rotar/agregar un secret).
+- `source $DOTFILES_PATH/secrets/envs.env` — recargar en la shell actual sin
+  reiniciar.
+- Las env vars ya están disponibles en cada shell nuevo vía
+  `shell/exports.sh`.
 
 ## 🤖 Configuración de asistentes (Claude Code / opencode)
 

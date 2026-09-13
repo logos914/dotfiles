@@ -1,5 +1,5 @@
 if ! ${DOT_REGISTRY_SOURCED:-false}; then
-  for file in $DOTFILES_PATH/scripts/package/recipes/{cargo,docpars}.sh; do
+  for file in $DOTFILES_PATH/scripts/package/recipes/{cargo,docpars,infisical}.sh; do
     source "$file"
   done
   unset file
